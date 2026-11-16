@@ -1,0 +1,22 @@
+FROM apache/hive:standalone-metastore-4.2.0
+
+ARG HADOOP_AWS_VERSION=3.4.1
+ARG AWS_JAVA_SDK_V2_VERSION=2.29.1
+ARG POSTGRES_JDBC_VERSION=42.7.4
+
+USER root
+RUN rm -f /opt/hive/lib/hadoop-aws-*.jar /opt/hive/lib/aws-java-sdk-bundle-*.jar /opt/hive/lib/software-amazon-awssdk-bundle-*.jar && \
+   rm -f /opt/hadoop/share/hadoop/tools/lib/hadoop-aws-*.jar /opt/hadoop/share/hadoop/tools/lib/bundle-*.jar /opt/hadoop/share/hadoop/tools/lib/aws-java-sdk-bundle-*.jar && \
+   curl -fSL -o /tmp/hadoop-aws-${HADOOP_AWS_VERSION}.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar && \
+   curl -fSL -o /tmp/aws-java-sdk-bundle-${AWS_JAVA_SDK_V2_VERSION}.jar https://repo1.maven.org/maven2/software/amazon/awssdk/bundle/${AWS_JAVA_SDK_V2_VERSION}/bundle-${AWS_JAVA_SDK_V2_VERSION}.jar && \
+   curl -fSL -o /tmp/postgresql-${POSTGRES_JDBC_VERSION}.jar https://jdbc.postgresql.org/download/postgresql-${POSTGRES_JDBC_VERSION}.jar && \
+   cp /tmp/hadoop-aws-${HADOOP_AWS_VERSION}.jar /opt/hive/lib/ && \
+   cp /tmp/aws-java-sdk-bundle-${AWS_JAVA_SDK_V2_VERSION}.jar /opt/hive/lib/ && \
+   cp /tmp/postgresql-${POSTGRES_JDBC_VERSION}.jar /opt/hive/lib/ && \
+   cp /tmp/hadoop-aws-${HADOOP_AWS_VERSION}.jar /opt/hadoop/share/hadoop/tools/lib/ && \
+   cp /tmp/aws-java-sdk-bundle-${AWS_JAVA_SDK_V2_VERSION}.jar /opt/hadoop/share/hadoop/tools/lib/ && \
+   rm /tmp/*.jar && \
+   echo "Installed jars (hive):" && ls -1 /opt/hive/lib/hadoop-aws-*.jar /opt/hive/lib/aws-java-sdk-bundle-*.jar /opt/hive/lib/postgresql-*.jar && \
+   echo "Installed jars (hadoop):" && ls -1 /opt/hadoop/share/hadoop/tools/lib/hadoop-aws-*.jar /opt/hadoop/share/hadoop/tools/lib/aws-java-sdk-bundle-*.jar
+#COPY conf/core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
+USER hive

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+ <!-- Thrift API -->
+ <property>
+   <name>metastore.thrift.uris</name>
+   <value>thrift://0.0.0.0:9083</value>
+ </property>
+
+ <!-- PostgreSQL backend -->
+ <property>
+   <name>javax.jdo.option.ConnectionDriverName</name>
+   <value>org.postgresql.Driver</value>
+ </property>
+ <property>
+   <name>javax.jdo.option.ConnectionURL</name>
+   <value>jdbc:postgresql://postgres:5432/metastore</value>
+ </property>
+ <property>
+   <name>javax.jdo.option.ConnectionUserName</name>
+   <value>metastore</value>
+ </property>
+ <property>
+   <name>javax.jdo.option.ConnectionPassword</name>
+   <value>metastore123</value>
+ </property>
+ <property>
+   <name>datanucleus.schema.autoCreateAll</name>
+   <value>true</value>
+ </property>
+
+ <!-- Iceberg REST Catalog Servlet -->
+ <property>
+   <name>metastore.catalog.servlet.port</name>
+   <value>8080</value>
+ </property>
+ <property>
+   <name>hive.metastore.catalog.servlet.port</name>
+   <value>8080</value>
+ </property>
+ <property>
+   <name>metastore.catalog.servlet.auth</name>
+   <value>none</value>
+ </property>
+ <property>
+   <name>hive.metastore.iceberg.catalog.servlet.path</name>
+   <value>iceberg</value>
+ </property>
+
+ <!-- S3 Object Storage -->
+ <property>
+   <name>fs.defaultFS</name>
+   <value>s3a://warehouse-bucket</value>
+ </property>
+ <property>
+   <name>fs.s3a.access.key</name>
+   <value>minioadmin</value>
+ </property>
+ <property>
+   <name>fs.s3a.secret.key</name>
+   <value>minioadmin</value>
+ </property>
+ <property>
+   <name>fs.s3a.aws.credentials.provider</name>
+   <value>org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider</value>
+ </property>
+ <property>
+   <name>fs.s3a.endpoint</name>
+   <value>s3.minio</value>
+ </property>
+ <property>
+   <name>fs.s3a.impl</name>
+   <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
+ </property>
+ <property>
+   <name>fs.s3a.path.style.access</name>
+   <value>true</value>
+ </property>
+ <property>
+   <name>fs.s3a.connection.ssl.enabled</name>
+   <value>true</value>
+ </property>
+ <property>
+   <name>fs.s3a.connection.establish.timeout</name>
+   <value>30000</value>
+ </property>
+ <property>
+   <name>fs.s3a.connection.timeout</name>
+   <value>200000</value>
+ </property>
+ <property>
+   <name>fs.s3a.socket.timeout</name>
+   <value>200000</value>
+ </property>
+
+ <!-- Warehouse -->
+ <property>
+   <name>metastore.warehouse.dir</name>
+   <value>s3a://warehouse-bucket/warehouse</value>
+ </property>
+ <property>
+   <name>hive.metastore.warehouse.external.dir</name>
+   <value>s3a://warehouse-bucket/warehouse</value>
+ </property>
+
+ <!-- Skip managed directory creation (S3 compatibility) -->
+ <property>
+   <name>hive.metastore.database.create.skip.dir</name>
+   <value>true</value>
+ </property>
+</configuration>

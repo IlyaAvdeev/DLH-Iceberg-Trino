@@ -1,0 +1,60 @@
+services:
+ postgres:
+   image: postgres:16
+   environment:
+     POSTGRES_USER: metastore
+     POSTGRES_PASSWORD: metastore123
+     POSTGRES_DB: metastore
+   ports:
+     - "5432:5432"
+   volumes:
+     - pgdata:/var/lib/postgresql/data
+   healthcheck:
+     test: ["CMD-SHELL", "pg_isready -U metastore"]
+     interval: 5s
+     timeout: 5s
+     retries: 5
+   networks:
+     - metastore-net
+
+ hive-metastore:
+   build:
+     context: .
+     dockerfile: Dockerfile-Hive
+   depends_on:
+     postgres:
+       condition: service_healthy
+   environment:
+     SERVICE_NAME: metastore
+     DB_DRIVER: postgres
+     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+   ports:
+     - "9083:9083"   # Thrift API
+     - "8080:8080"   # Iceberg REST Catalog
+   volumes:
+     - ./conf/metastore-site.xml:/opt/hive/conf/metastore-site.xml:ro
+   restart: unless-stopped
+   networks:
+     - metastore-net
+
+ minio:
+   image: minio/minio:latest
+   ports:
+     - "9900:9000"
+     - "9901:9001"
+   command: [ "server", "--console-address", ":9001", "/data" ]
+   environment:
+     MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
+     MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+   networks:
+     - metastore-net
+
+volumes:
+ pgdata:
+
+networks:
+ metastore-net:
+   ipam:
+     config:
+       - subnet: "10.99.0.0/16"
