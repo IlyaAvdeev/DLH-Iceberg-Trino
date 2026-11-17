@@ -92,7 +92,22 @@ services:
       exit 0;
       "
     networks:
-      - metastore-net         
+      - metastore-net
+
+ trino:
+   image: trinodb/trino:483
+   depends_on:
+    - hive-metastore
+   environment:
+     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+   ports:
+    - "8090:8080"   # внутри контейнера — стандартный 8080
+   volumes:
+    - ./trino/etc/config.properties:/etc/trino/config.properties:ro
+    - ./trino/etc/catalog:/etc/trino/catalog:ro
+   networks:
+    - metastore-net          
 
 volumes:
  pgdata:
