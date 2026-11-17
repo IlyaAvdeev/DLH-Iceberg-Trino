@@ -3,7 +3,7 @@
  <!-- Thrift API -->
  <property>
    <name>metastore.thrift.uris</name>
-   <value>thrift://0.0.0.0:9083</value>
+   <value>thrift://localhost:9083</value>
  </property>
 
  <!-- PostgreSQL backend -->
@@ -65,18 +65,17 @@
  </property>
  <property>
    <name>fs.s3a.endpoint</name>
-   <value>s3.minio</value>
+   <value>http://minio:9000</value>
  </property>
  <property>
+   <name>fs.s3a.connection.ssl.enabled</name>
+   <value>false</value>
+ </property> <property>
    <name>fs.s3a.impl</name>
    <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
  </property>
  <property>
    <name>fs.s3a.path.style.access</name>
-   <value>true</value>
- </property>
- <property>
-   <name>fs.s3a.connection.ssl.enabled</name>
    <value>true</value>
  </property>
  <property>

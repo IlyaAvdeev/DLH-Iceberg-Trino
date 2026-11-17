@@ -18,5 +18,5 @@ RUN rm -f /opt/hive/lib/hadoop-aws-*.jar /opt/hive/lib/aws-java-sdk-bundle-*.jar
    rm /tmp/*.jar && \
    echo "Installed jars (hive):" && ls -1 /opt/hive/lib/hadoop-aws-*.jar /opt/hive/lib/aws-java-sdk-bundle-*.jar /opt/hive/lib/postgresql-*.jar && \
    echo "Installed jars (hadoop):" && ls -1 /opt/hadoop/share/hadoop/tools/lib/hadoop-aws-*.jar /opt/hadoop/share/hadoop/tools/lib/aws-java-sdk-bundle-*.jar
-#COPY conf/core-site.xml /opt/hadoop/etc/hadoop/core-site.xml
+COPY conf/metastore-site.xml /opt/hadoop/etc/hadoop/core-site.xml
 USER hive

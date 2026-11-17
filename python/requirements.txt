@@ -1,0 +1,1 @@
+pyiceberg[pyarrow,s3fs,pyiceberg-core]>=0.10.0
