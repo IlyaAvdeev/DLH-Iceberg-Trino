@@ -1,0 +1,124 @@
+services:
+  postgres:
+    hostname: postgres
+    image: postgres:16
+    environment:
+      POSTGRES_USER: metastore
+      POSTGRES_PASSWORD: metastore123
+      POSTGRES_DB: metastore
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metastore"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nessie-net
+
+  nessie:
+    hostname: nessie
+    image: ghcr.io/projectnessie/nessie:0.110.0-java
+    environment:
+      nessie.version.store.type: JDBC
+      quarkus.datasource.db-kind: postgresql
+      quarkus.datasource.jdbc.url: jdbc:postgresql://postgres:5432/metastore
+      quarkus.datasource.username: metastore
+      quarkus.datasource.password: metastore123
+      # Настройки встроенного Iceberg REST Catalog и S3 (MinIO)
+      nessie.catalog.default-warehouse: warehouse
+      nessie.catalog.warehouses.warehouse.location: s3://warehouse-bucket/warehouse
+      nessie.catalog.service.s3.default-options.endpoint: http://minio:9000
+      nessie.catalog.service.s3.default-options.path-style-access: "true"
+      nessie.catalog.service.s3.default-options.region: us-east-1
+      nessie.catalog.service.s3.default-options.auth-type: STATIC
+      nessie.catalog.service.s3.default-options.access-key: urn:nessie-secret:quarkus:nessie.catalog.secrets.s3-creds
+      nessie.catalog.secrets.s3-creds.name: ${AWS_ACCESS_KEY_ID:-minioadmin}
+      nessie.catalog.secrets.s3-creds.secret: ${AWS_SECRET_ACCESS_KEY:-minioadmin}
+    ports:
+      - "19120:19120"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:19120/api/v2/config || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - nessie-net
+
+  init:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    depends_on:
+      nessie:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    networks:
+      - nessie-net
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: [ "server", "--console-address", ":9001", "/data" ]
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY}
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nessie-net
+
+  minio-init:
+    image: clickhouse/minio-mc:RELEASE.2026-09-16T00-00-00Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set myminio http://minio:9000 $${AWS_ACCESS_KEY_ID} $${AWS_SECRET_ACCESS_KEY};
+      mc mb --ignore-existing myminio/warehouse-bucket;
+      exit 0;
+      "
+    networks:
+      - nessie-net
+
+  trino:
+    image: trinodb/trino:483
+    depends_on:
+      nessie:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    ports:
+      - "8090:8080"
+    volumes:
+      - ./trino/etc/config.properties:/etc/trino/config.properties:ro
+      - ./trino/etc/catalog:/etc/trino/catalog:ro
+    networks:
+      - nessie-net
+
+volumes:
+  pgdata:
+
+networks:
+  nessie-net:
+    driver: bridge
